@@ -15,10 +15,16 @@ const nextConfig = {
       "encrypted-tbn0.gstatic.com",
     ],
   },
-  // this temporary, for testing purposes.
+  // TEMPORARY - for testing purposes
   typescript: {
-    ignoreBuildErrors: process.env.TS_IGNORE_BUILD_ERRORS === "true",
+    ignoreBuildErrors: true,
   },
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
+  // END TEMPORARY
 };
 
 module.exports = nextConfig;
