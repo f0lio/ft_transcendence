@@ -1,17 +1,22 @@
-import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
 import { fetcher } from "@utils/swr.fetcher";
 
 const useUser = (username: string, shouldFetch: boolean = true) => {
-  const { data, error, isLoading, isValidating } = useSWR(
+  const { data, error, isLoading } = useSWRImmutable(
     shouldFetch ? `/users/${username}` : null,
-    fetcher
+    fetcher,
+    // {
+    //   revalidateIfStale: false,
+    //   revalidateOnFocus: false,
+    //   revalidateOnReconnect: false,
+    //   refreshWhenOffline: false,
+    // }
   );
 
   return {
     data,
     isLoading: isLoading,
-    isValidating: isValidating,
     error: error,
   };
 };

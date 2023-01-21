@@ -18,7 +18,7 @@ const losses = 7;
 const serves = 10; // how many times you served
 const total_points = wins * 2 - losses * 1;
 
-export const data = {
+export const SAMPLE_DATA = {
   labels: ["Total Games", "Total Points", "Losses", "Serves", "Wins"],
   datasets: [
     {
@@ -30,10 +30,26 @@ export const data = {
   ],
 };
 
-const PlayerStatsChart = () => {
+const LOADING_DATA = {
+  ...SAMPLE_DATA,
+  datasets: [
+    {
+      ...SAMPLE_DATA.datasets[0],
+      data: SAMPLE_DATA.datasets[0].data.map(() => 0),
+    },
+  ],
+};
+
+const PlayerStatsChart = ({
+  data = SAMPLE_DATA,
+  isLoading,
+}: {
+  data: typeof SAMPLE_DATA;
+  isLoading: boolean;
+}) => {
   return (
     <Radar
-      data={data}
+      data={isLoading ? data : LOADING_DATA}
       options={{
         responsive: true,
       }}

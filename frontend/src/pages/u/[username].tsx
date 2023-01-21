@@ -126,7 +126,7 @@ const UserNotFoundHeader = ({ username }: { username: string }) => (
       <p className="text-lg font-semibold text-gray-800">@{username}</p>
     </div>
     <div className="flex flex-col items-center justify-center pb-16">
-      <p className="text-4xl font-bold text-gray-900">
+      <p className="md:text-4xl text-2xl text-center font-bold text-gray-900">
         This account {"doesn't"} exist
       </p>
       <p className="text-base font-normal text-gray-600">
@@ -136,11 +136,16 @@ const UserNotFoundHeader = ({ username }: { username: string }) => (
   </section>
 );
 
-const UserLoadingHeader = () => (
+const UserLoadingHeader = ({ username }: { username: string }) => (
   <section className="w-full h-full py-2 bg-white shadow-md rounded-b-xl">
     <div className="flex items-start justify-between p-10">
       <p className="text-lg font-semibold text-gray-800">
-        <span className="animate-pulse">Loading...</span>
+        <span className="animate-pulse">@{username}</span>
+      </p>
+    </div>
+    <div className="flex flex-col items-center justify-center pb-16">
+      <p className="text-4xl font-bold text-gray-900">
+        <span className="animate-pulse">Loading info...</span>
       </p>
     </div>
   </section>
@@ -171,17 +176,20 @@ const UserInfoHeader = ({
               <div className="w-full h-full bg-gray-300 rounded-t-xl " />
             ) : (
               <Image
+                onClick={() => user?.cover_url && setIsCoverModalOpen(true)}
                 src={user?.cover_url || "/images/cover-placeholder.png"}
                 alt={
                   user?.cover_url
                     ? `cover for ${user?.username}`
                     : "cover placeholder"
                 }
-                onClick={() => user?.cover_url && setIsCoverModalOpen(true)}
                 fill
                 className={cn("object-cover rounded-t-xl", {
                   "cursor-pointer": user?.cover_url,
                 })}
+                // loader={
+                //   <div className="w-full h-full bg-red-800 rounded-t-xl " />
+                // }
               />
             )
           ) : (
@@ -189,7 +197,7 @@ const UserInfoHeader = ({
           )}
           <figure
             className="w-[160px] h-[160px] absolute -bottom-14 left-8 rounded-full sm:-bottom-8 sm:left-10 ring-4 ring-white"
-            onClick={() => setIsAvatarModalOpen(true)}
+            onClick={() => user?.avatar_url && setIsAvatarModalOpen(true)}
           >
             {user ? (
               <Image
@@ -243,10 +251,10 @@ const UserInfoHeader = ({
                 }}
               />
             </div>
-          ) : !isLoading ? (
-            <UserNotFoundHeader username={username} />
+          ) : isLoading ? (
+            <UserLoadingHeader username={username} />
           ) : (
-            <UserLoadingHeader />
+            <UserNotFoundHeader username={username} />
           )}
         </section>
       </div>
@@ -258,14 +266,14 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const ctx = useAuthContext();
-  const username = Array.isArray(router.query)
-    ? router.query[0]
-    : router.query.username;
-  const isMyProfile = router.isReady && username === ctx?.user?.username;
+
+  const [shouldStartLoading, setShouldStartLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [isMyProfile, setIsMyProfile] = useState(false);
 
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
-  const user = useUser(username, router.isReady);
+  const user = useUser(username, shouldStartLoading);
 
   useEffect(() => {
     if (
@@ -276,7 +284,23 @@ export default function ProfilePage() {
       removeUser();
       router.push("/");
     }
-  }, [router, ctx.isAuthenticated, ctx.loadingUser]);
+    if (router.isReady) {
+      setIsMyProfile(username === ctx?.user?.username);
+      setUsername(
+        Array.isArray(router.query) ? router.query[0] : router.query.username
+      );
+      setShouldStartLoading(true);
+    }
+    // console.count("ProfilePage useEffect");
+  }, [
+    router,
+    ctx.isAuthenticated,
+    ctx.loadingUser,
+    ctx?.user?.username,
+    username,
+  ]);
+
+  // console.count("ProfilePage");
 
   return (
     <MainLayout
@@ -293,41 +317,45 @@ export default function ProfilePage() {
             setIsAvatarModalOpen={setIsAvatarModalOpen}
             setIsCoverModalOpen={setIsCoverModalOpen}
           />
-          <UserStats username={username} />
+          {user.data && <UserStats username={username} />}
         </div>
-        <LastGames username={username} />
+        {user.data && <LastGames username={username} />}
       </div>
 
       {/* Modals */}
-      {isAvatarModalOpen && user && (
-        <BaseModal
-          isOpen={isAvatarModalOpen}
-          onClose={() => setIsAvatarModalOpen(false)}
-        >
-          <div className="w-[600px] h-[600px] flex flex-col items-center justify-center ">
-            <Image
-              src={user.data?.avatar_url || "/images/default-avatar.jpg"}
-              alt={`avatar for ${username}`}
-              fill
-              className="object-cover rounded-full"
-            />
-          </div>
-        </BaseModal>
-      )}
-      {setIsCoverModalOpen && (
-        <BaseModal
-          isOpen={isCoverModalOpen}
-          onClose={() => setIsCoverModalOpen(false)}
-        >
-          <div className="w-[900px] h-[220px] flex flex-col items-center justify-center">
-            <Image
-              src={user.data?.cover_url || "/images/cover-placeholder.png"}
-              alt={`cover for ${username}`}
-              fill
-              className="object-cover"
-            />
-          </div>
-        </BaseModal>
+      {user.data && (
+        <>
+          {isAvatarModalOpen && (
+            <BaseModal
+              isOpen={isAvatarModalOpen}
+              onClose={() => setIsAvatarModalOpen(false)}
+            >
+              <div className="w-[600px] h-[600px] flex flex-col items-center justify-center ">
+                <Image
+                  src={user.data?.avatar_url || "/images/default-avatar.jpg"}
+                  alt={`avatar for ${username}`}
+                  fill
+                  className="object-cover rounded-full"
+                />
+              </div>
+            </BaseModal>
+          )}
+          {isCoverModalOpen && (
+            <BaseModal
+              isOpen={isCoverModalOpen}
+              onClose={() => setIsCoverModalOpen(false)}
+            >
+              <div className="w-[900px] h-[220px] flex flex-col items-center justify-center">
+                <Image
+                  src={user.data?.cover_url || "/images/cover-placeholder.png"}
+                  alt={`cover for ${username}`}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </BaseModal>
+          )}
+        </>
       )}
     </MainLayout>
   );

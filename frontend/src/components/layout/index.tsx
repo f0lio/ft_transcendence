@@ -5,8 +5,9 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 
 import ChatStuff from "@components/chat/ChatStuff";
-import LoadingPage from "@ui/LoadingPage";
 import Navbar from "@components/navbar";
+import LoadingPage from "@ui/LoadingPage";
+import { APP_NAME } from "@utils/constants";
 import { useAuthContext } from "context/auth.context";
 
 interface MainLayoutProps {
@@ -21,7 +22,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   children,
   pageIsProtected = true,
   noLayout = false,
-  title = "Transcendence",
+  title = APP_NAME,
   backgroundColor,
 }) => {
   const ctx = useAuthContext();
@@ -41,7 +42,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       !ctx?.isAuthenticated &&
       window.location.pathname !== "/"
     ) {
-      console.log("redirecting to login page");
       router.replace("/");
     }
   }, [ctx.loadingUser]);
